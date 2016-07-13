@@ -13,8 +13,6 @@
 #Anyone can use this, just change the branches name!         #
 ##############################################################
 
-MESSAGE=""
-
 echo "Enter your message for commit: "
 read MESSAGE
 
@@ -27,3 +25,4 @@ git checkout master
 git pull origin teste
 git push origin master
 git checkout teste
+git branch -v
