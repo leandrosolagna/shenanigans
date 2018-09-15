@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #############################################
-# Script to deploy and application          #
+# Script to deploy an application          #
 # This was before I learned about webhooks. #
 #############################################
 
