@@ -16,7 +16,7 @@ Script to reload, start and stop the docker stack.
 
 }
 
-function remove-all () {
+function removeAll () {
 
 	printf "This will remove all stack components (stack, network, volume)\n"
 	printf "Are you sure you want to proceed? (y/N)\n"
@@ -50,7 +50,6 @@ function volume () {
 
 	if docker volume ls | grep -q 'db-dev'; then
 		printf "Volume already exists\n"
-		exit 0
 	else
 		printf "Creating the volume db-dev\n"
          	docker volume create db-dev
@@ -58,21 +57,21 @@ function volume () {
 
 }
 
-function reload-stack () {
+function reloadStack () {
 
 	printf "Reloading the stack\n"
         docker stack deploy -c docker-stack.yml dev
 
 }
 
-function start-stack () {
+function startStack () {
 
 	printf "Starting the stack dev\n"
 	docker stack deploy -c docker-stack.yml dev
 
 }
 
-function stop-stack () {
+function stopStack () {
 
 	printf "Stopping the stack dev\n"
 	docker stack rm dev
@@ -80,6 +79,7 @@ function stop-stack () {
 }
 
 case "$1" in
+
 	-\?)    
 	        echo ""	
 		echo "Invalid option: '$1'."
@@ -90,22 +90,22 @@ case "$1" in
 	start)
 		network
 		volume
-		start-stack
+		startStack
 		exit 0
 		;;
 
 	stop)
-		stop-stack
+		stopStack
 		exit 0
 	        ;;
 
 	reload)
-		reload-stack
+		reloadStack
 		exit 0
 		;;
 		
 	remove)
-		remove-all
+		removeAll
 		exit 0
 		;;
 
