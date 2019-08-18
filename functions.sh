@@ -1,6 +1,7 @@
 #!/bin/bash
 
 usage() {
+
 	echo -n "functions [OPTION]
 
 Script to reload, start and stop the docker stack.
@@ -12,13 +13,15 @@ Script to reload, start and stop the docker stack.
   start   Start the stack
   stop    Stop the stack
 "
+
 }
 
 function remove-all () {
 
 	printf "This will remove all stack components (stack, network, volume)\n"
 	printf "Are you sure you want to proceed? (y/N)\n"
-	read ANSWER
+	read -r ANSWER
+
 	if [[ ${ANSWER} == 'y' ]]; then
 		printf "Stopping the stack\n"
         	docker stack rm dev
@@ -34,7 +37,7 @@ function remove-all () {
 
 function network () {
 
-	if [[ "`docker network inspect leandro`"  ]]; then
+	if [[ "$(docker network inspect leandro)" ]]; then
 		printf "Network already exists\n"
 	else
 		printf "Creating the network 'leandro'\n"
@@ -45,7 +48,7 @@ function network () {
 
 function volume () {
 
-	if [[ "`docker volume ls | grep db-dev`" ]]; then
+	if docker volume ls | grep -q 'db-dev'; then
 		printf "Volume already exists\n"
 		exit 0
 	else
@@ -77,8 +80,15 @@ function stop-stack () {
 }
 
 case "$1" in
+	-\?)    
+	        echo ""	
+		echo "Invalid option: '$1'."
+		usage >&2
+	        exit 2
+		;;
+		
 	start)
-		network >&2;
+		network
 		volume
 		start-stack
 		exit 0
@@ -104,11 +114,8 @@ case "$1" in
 		exit 0
 		;;
 	
-        *|-*)
-	        echo ""	
-		echo "Invalid option: '$1'."
-		usage >&2
-	        exit 2
-		break
+        *)
+	        exit 1
 		;;
+		
 esac
