@@ -17,16 +17,18 @@ Script to reload, start and stop the docker stack.
 function remove-all () {
 
 	printf "This will remove all stack components (stack, network, volume)\n"
-	printf "Are you sure you want to proceed? (y/N)"
-	if ; then
+	printf "Are you sure you want to proceed? (y/N)\n"
+	read ANSWER
+	if [[ ${ANSWER} == 'y' ]]; then
+		printf "Stopping the stack\n"
+        	docker stack rm dev
+		printf "Removing the network\n"
+       		docker network rm leandro
+		printf "Removing the volume\n"
+        	docker volume rm db-dev
 	else
+		printf "Procedure cancelled.\n"
 	fi
-	printf "Stopping the stack\n"
-        docker stack rm dev
-	printf "Removing the network\n"
-        docker network rm leandro
-	printf "Removing the volume\n"
-        docker volume rm db-dev
 
 }
 
