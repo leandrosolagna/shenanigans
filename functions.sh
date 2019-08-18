@@ -82,7 +82,6 @@ case "$1" in
 
 	-\?)    
 	        echo ""	
-		echo "Invalid option: '$1'."
 		usage >&2
 	        exit 2
 		;;
@@ -115,7 +114,10 @@ case "$1" in
 		;;
 	
         *)
-	        exit 1
+	        echo ""	
+		echo "Invalid option: '$1'."
+		usage >&2
+	        exit 2
 		;;
 		
 esac
