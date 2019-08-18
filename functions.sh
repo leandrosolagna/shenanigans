@@ -3,57 +3,110 @@
 usage() {
 	echo -n "functions [OPTION]
 
-Script to start and stop the docker stack.
+Script to reload, start and stop the docker stack.
 
  Options:
   -h      Show this help menu
+  remove  Removes all stack components (stack, network and volume)
+  reload  Reload the stack
   start   Start the stack
   stop    Stop the stack
 "
 }
 
-function network() {
-	if [ -z "`docker network ls | grep leandro`" ]; then
-		printf "Network already exists"
-		exit 0
+function remove-all () {
+
+	printf "This will remove all stack components (stack, network, volume)\n"
+	printf "Are you sure you want to proceed? (y/N)"
+	if ; then
 	else
-		echo "Creating the network 'leandro'"
+	fi
+	printf "Stopping the stack\n"
+        docker stack rm dev
+	printf "Removing the network\n"
+        docker network rm leandro
+	printf "Removing the volume\n"
+        docker volume rm db-dev
+
+}
+
+function network () {
+
+	if [[ "`docker network inspect leandro`"  ]]; then
+		printf "Network already exists\n"
+	else
+		printf "Creating the network 'leandro'\n"
  	        docker network create leandro
 	fi
+
 }
 
 function volume () {
-	if [ -z "`docker volume ls | grep db-dev`"]; then
-		printf "Volume already exists"
+
+	if [[ "`docker volume ls | grep db-dev`" ]]; then
+		printf "Volume already exists\n"
 		exit 0
 	else
-		echo "Creating the volume db-dev"
+		printf "Creating the volume db-dev\n"
          	docker volume create db-dev
 	fi
+
 }
 
-#while [[ $1 = -?* ]]; do
-	case "$1" in
-		start)
-			echo "Start"
-			network >&2;
-			volume
-		        ;;
-		stop)
-			echo "Stop"
-		        ;;
+function reload-stack () {
 
-		-h) 
-			usage >&2;
-			exit 0
-			;;
-        	*|-*)
-		        echo ""	
-			echo "Invalid option: '$1'."
-			usage >&2
-		        exit 2
-			break
-			;;
-        esac
-#done
+	printf "Reloading the stack\n"
+        docker stack deploy -c docker-stack.yml dev
 
+}
+
+function start-stack () {
+
+	printf "Starting the stack dev\n"
+	docker stack deploy -c docker-stack.yml dev
+
+}
+
+function stop-stack () {
+
+	printf "Stopping the stack dev\n"
+	docker stack rm dev
+
+}
+
+case "$1" in
+	start)
+		network >&2;
+		volume
+		start-stack
+		exit 0
+		;;
+
+	stop)
+		stop-stack
+		exit 0
+	        ;;
+
+	reload)
+		reload-stack
+		exit 0
+		;;
+		
+	remove)
+		remove-all
+		exit 0
+		;;
+
+	-h) 
+		usage >&2;
+		exit 0
+		;;
+	
+        *|-*)
+	        echo ""	
+		echo "Invalid option: '$1'."
+		usage >&2
+	        exit 2
+		break
+		;;
+esac
