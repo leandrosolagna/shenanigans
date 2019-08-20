@@ -16,13 +16,32 @@ Script to reload, start and stop the docker stack.
 
 }
 
+function checkFile () {
+
+	if [[ -f docker-stack.yml ]]; then
+		return 0
+	else
+		printf "Please, run this script in the same directory as the file 'docker-stack.yml'.\n"
+		exit 1
+	fi
+}
+
+function login () {
+
+	printf "You need to login on the registry\n"
+	printf "docker login REGISTRY\n"
+	docker login REGISTRY
+	startStack
+
+}
+
 function removeAll () {
 
 	printf "This will remove all stack components (stack, network, volume)\n"
 	printf "Are you sure you want to proceed? (y/N)\n"
 	read -r ANSWER
 
-	if [[ ${ANSWER} == 'y' ]]; then
+	if [[ ${ANSWER} == "y" || ${ANSWER} == "Y" ]]; then
 		printf "Stopping the stack\n"
         	docker stack rm dev
 		printf "Removing the network\n"
@@ -40,7 +59,7 @@ function network () {
 	if [[ "$(docker network inspect leandro)" ]]; then
 		printf "Network already exists\n"
 	else
-		printf "Creating the network 'leandro'\n"
+		printf "Creating the network 'ingress'\n"
  	        docker network create leandro
 	fi
 
@@ -60,14 +79,18 @@ function volume () {
 function reloadStack () {
 
 	printf "Reloading the stack\n"
-        docker stack deploy -c docker-stack.yml dev
+	docker stack deploy -c docker-stack.yml dev
 
 }
 
 function startStack () {
 
-	printf "Starting the stack dev\n"
-	docker stack deploy -c docker-stack.yml dev
+	if grep -q "registry" ~/.docker/config.json; then
+		printf "Starting the stack dev\n"
+		docker stack deploy -c docker-stack.yml dev
+	else
+		login
+	fi
 
 }
 
@@ -80,13 +103,14 @@ function stopStack () {
 
 case "$1" in
 
-	-\?)    
-	        echo ""	
+	-\?)
+	        echo ""
 		usage >&2
 	        exit 2
 		;;
-		
+
 	start)
+		checkFile
 		network
 		volume
 		startStack
@@ -94,30 +118,33 @@ case "$1" in
 		;;
 
 	stop)
+		checkFile
 		stopStack
 		exit 0
 	        ;;
 
 	reload)
+		checkFile
 		reloadStack
 		exit 0
 		;;
-		
+
 	remove)
+		checkFile
 		removeAll
 		exit 0
 		;;
 
-	-h) 
+	-h)
 		usage >&2;
 		exit 0
 		;;
-	
+
         *)
-	        echo ""	
+	        echo ""
 		echo "Invalid option: '$1'."
 		usage >&2
 	        exit 2
 		;;
-		
+
 esac
