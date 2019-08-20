@@ -59,7 +59,7 @@ function network () {
 	if [[ "$(docker network inspect leandro)" ]]; then
 		printf "Network already exists\n"
 	else
-		printf "Creating the network 'ingress'\n"
+		printf "Creating the network 'leandro'\n"
  	        docker network create leandro
 	fi
 
