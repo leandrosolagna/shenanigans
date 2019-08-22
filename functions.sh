@@ -1,5 +1,7 @@
 #!/bin/bash
 
+PRIVATEREGISTRY=private.registy.com
+
 usage() {
 
 	echo -n "functions [OPTION]
@@ -21,18 +23,33 @@ function checkFile () {
 	if [[ -f docker-stack.yml ]]; then
 		return 0
 	else
-		printf "Please, run this script in the same directory as the file 'docker-stack.yml'.\n"
+		printf "\033[0;31mPlease, run this script in the same directory as the file 'docker-stack.yml'.\e[0m\n"
 		exit 1
+	fi
+}
+
+function checkSwarm () {
+
+	if [[ "$(docker info --format '{{.Swarm.LocalNodeState}}')" == "inactive" ]]; then
+		printf "Host is not in swarm mode.\n"
+		printf "Putting the host in swarm mode.\n"
+		docker swarm init --advertise-addr $(ip a | grep 192.168.56 | awk '{print $(NF)}')
+	else
+		return 0
 	fi
 }
 
 function login () {
 
-	printf "You need to login on the registry\n"
-	printf "docker login REGISTRY\n"
-	docker login REGISTRY
-	startStack
-
+	if [[ "$(cat ~/.docker/config.json | grep ${PRIVATEREGISTRY})" ]]; then
+		return 0
+	else
+		printf "You need to login on the registry ${PRIVATEREGISTRY}.\n"
+		printf "docker login ${PRIVATEREGISTRY}\n"
+		printf "Please, type the your username and password. They are the same as bk-inside"
+		docker login ${PRIVATEREGISTRY}
+	fi
+	
 }
 
 function removeAll () {
@@ -45,7 +62,7 @@ function removeAll () {
 		printf "Stopping the stack\n"
         	docker stack rm dev
 		printf "Removing the network\n"
-       		docker network rm leandro
+       		docker network rm ingress
 		printf "Removing the volume\n"
         	docker volume rm db-dev
 	else
@@ -56,11 +73,11 @@ function removeAll () {
 
 function network () {
 
-	if [[ "$(docker network inspect leandro)" ]]; then
+	if [[ "$(docker network inspect ingress)" ]]; then
 		printf "Network already exists\n"
 	else
-		printf "Creating the network 'leandro'\n"
- 	        docker network create leandro
+		printf "Creating the network 'ingress'\n"
+ 	        docker network create --ingress --driver overlay ingress
 	fi
 
 }
@@ -79,19 +96,19 @@ function volume () {
 function reloadStack () {
 
 	printf "Reloading the stack\n"
-	docker stack deploy -c docker-stack.yml dev
+	docker stack deploy --with-registry-auth -c docker-stack.yml dev
 
 }
 
 function startStack () {
 
-	if grep -q "registry" ~/.docker/config.json; then
+	if grep -q ${PRIVATEREGISTRY} ~/.docker/config.json; then
 		printf "Starting the stack dev\n"
 		docker stack deploy -c docker-stack.yml dev
 	else
 		login
 	fi
-
+		
 }
 
 function stopStack () {
@@ -103,13 +120,15 @@ function stopStack () {
 
 case "$1" in
 
-	-\?)
-	        echo ""
+	-\?)    
+	        echo ""	
 		usage >&2
 	        exit 2
 		;;
-
+		
 	start)
+		login
+		checkSwarm
 		checkFile
 		network
 		volume
@@ -124,27 +143,28 @@ case "$1" in
 	        ;;
 
 	reload)
+		checkSswarm
 		checkFile
 		reloadStack
 		exit 0
 		;;
-
+		
 	remove)
 		checkFile
 		removeAll
 		exit 0
 		;;
 
-	-h)
+	-h) 
 		usage >&2;
 		exit 0
 		;;
-
+	
         *)
-	        echo ""
+	        echo ""	
 		echo "Invalid option: '$1'."
 		usage >&2
 	        exit 2
 		;;
-
+		
 esac
