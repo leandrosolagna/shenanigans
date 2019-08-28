@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PRIVATEREGISTRY=private.registy.com
+PRIVATEREGISTRY=https://index.docker.io/v1/
 
 ###COLORS VARIABLES###
 
@@ -81,10 +81,10 @@ function removeAll () {
 
 function network () {
 
-	if [[ "$(docker network inspect ingress)" ]]; then
-		printf "Network already exists\n"
+	if docker network ls | grep -q 'ingress'; then
+		return 0
 	else
-		printf "${BLUE}Creating the network 'ingress'.${WHITE}\n"
+		printf "${BLUE}Creating the network 'ingress'${WHITE}\n"
  	        docker network create --ingress --driver overlay ingress
 	fi
 
@@ -93,9 +93,9 @@ function network () {
 function volume () {
 
 	if docker volume ls | grep -q 'db-dev'; then
-		printf "Volume already exists\n"
+		return 0
 	else
-		printf "${BLUE}Creating the volume db-dev!${WHITE}\n"
+		printf "${BLUE}Creating the volume db-dev${WHITE}\n"
          	docker volume create db-dev
 	fi
 
@@ -103,7 +103,7 @@ function volume () {
 
 function reloadStack () {
 
-	printf "${BLUE}Reloading the stack!${WHITE}\n"
+	printf "${BLUE}Reloading the stack${WHITE}\n"
 	docker stack deploy --with-registry-auth -c docker-stack.yml dev
 
 }
@@ -111,7 +111,7 @@ function reloadStack () {
 function startStack () {
 
 	if grep -q ${PRIVATEREGISTRY} ~/.docker/config.json; then
-		printf "${GREEN}Starting the stack dev!${WHITE}\n"
+		printf "${GREEN}Starting the stack dev${WHITE}\n"
 		docker stack deploy --with-registry-auth -c docker-stack.yml dev
 	else
 		login
@@ -121,7 +121,7 @@ function startStack () {
 
 function stopStack () {
 
-	printf "${GREEN}Stopping the stack dev.${WHITE}\n"
+	printf "${GREEN}Stopping the stack dev${WHITE}\n"
 	docker stack rm dev
 
 }
