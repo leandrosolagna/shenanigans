@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PRIVATEREGISTRY=https://index.docker.io/v1/
+PRIVATEREGISTRY=your.private.registry.com
 
 ###COLORS VARIABLES###
 
